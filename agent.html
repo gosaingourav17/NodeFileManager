@@ -1,0 +1,137 @@
+<html lang="zxx" class="no-js">
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta charset="UTF-8">
+	<!-- Title -->
+	<title>FileManager</title>
+
+	<link href="https://fonts.googleapis.com/css?family=Poppins:100,200,400,300,500,600,700" rel="stylesheet">
+
+	<link rel="stylesheet" href="css/linearicons.css">
+	<link rel="stylesheet" href="css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/bootstrap.css">
+	<link rel="stylesheet" href="css/magnific-popup.css">
+	<link rel="stylesheet" href="css/jquery-ui.css">
+	<link rel="stylesheet" href="css/nice-select.css">
+	<link rel="stylesheet" href="css/animate.min.css">
+	<link rel="stylesheet" href="css/owl.carousel.css">
+	<link rel="stylesheet" href="css/main.css">
+
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+</head>
+
+
+<script>
+	//delete function 
+	function delet(x) {
+		var deleteobject = { filetodelete: x }
+		$.post("http://localhost:3000/crud/delete/", deleteobject, function () {
+			window.location.href = 'http://localhost:3000/';
+		});
+
+	}
+	//download function
+	function download(x) {
+		window.location.href = 'http://localhost:3000/crud/download/' + x;
+	}
+	//function to get list of files in current directory
+	function getlist() {
+		document.getElementById("myP").style.visibility = "hidden";
+
+		$.get("http://localhost:3000/crud/read", function (data, status) {
+			var len = data.length;
+			for (i = 0; i < len; i++) {
+				var iDiv = document.createElement('div');
+
+				iDiv.innerHTML = `<div class='card text-center'><div class='card-header'>`
+					+ data[i] + ` <button onclick="delet('` + data[i] + `')">Delete</button>
+			<button onclick="download('` + data[i] + `')">Download</button></div></div>`
+				document.getElementById("cardsdiv").appendChild(iDiv);
+			}
+
+		});
+	}
+
+
+	$(document).ready(function () {
+
+		getlist();
+		//files tab
+		$("#Fileslist").click(function () {
+			document.getElementById("cardsdiv").innerHTML = "";
+			getlist();
+		});
+		//upload tab
+		$("#UploadBar").click(function () {
+			document.getElementById("cardsdiv").innerHTML = "";
+			document.getElementById("myP").style.visibility = "visible";
+		});
+		//rename tab
+		$("#Rename").click(function () {
+			document.getElementById("myP").style.visibility = "hidden";
+			document.getElementById("cardsdiv").innerHTML = "";
+			mNewObj = document.createElement('div');
+			mNewObj.id = "BOX";
+			mNewObj.style.visibility = "show";
+			mNewObj.innerHTML = `<form id="rename"  action="http://localhost:3000/crud/update" method="post">
+						<h1>From:</h1>
+						<input type="text" name="prev" value="">
+						<h1>To:</h1>
+						<input type="text" name="final" value="">
+						<input  type="submit" />
+					</form>`;
+
+			document.getElementById("cardsdiv").appendChild(mNewObj);
+		});
+
+	});
+
+
+</script>
+
+<body>
+
+
+
+	<section class="sample-text-area">
+		<div class="card text-center">
+			<div class="card-header">
+				<ul class="nav nav-tabs card-header-tabs">
+					<li class="nav-item">
+						<button id="Fileslist" class="nav-link active">Files</button>
+					</li>
+					<li class="nav-item">
+						<button class="nav-link active" id="UploadBar">Upload</button>
+					</li>
+
+					<li class="nav-item">
+						<button class="nav-link active" id="Rename">Rename</button>
+					</li>
+				</ul>
+			</div>
+
+			<div class="card-body" id="card-body">
+				<div id="myP">
+					<div class="topnav">
+						<form id="fileupload" action="http://localhost:3000/crud/upload" method="post" enctype="multipart/form-data">
+							<h1>Upload File Here</h1>
+							<input type="file" name="upfile" value="">
+							<input type="submit" />
+						</form>
+
+
+					</div>
+				</div>
+				<!--Main div-->
+				<div id="cardsdiv">
+					<h5 class="card-title" id="card-title">Files</h5>
+				</div>
+			</div>
+		</div>
+	</section>
+
+</body>
+
+</html>
