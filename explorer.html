@@ -1,0 +1,208 @@
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta charset="UTF-8">
+	<!-- Title -->
+	<title>FileManager</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/bootstrap.css">
+	<link rel="stylesheet" href="css/main.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+</head>
+
+
+<script>
+	var curdirect = '/';
+
+	//delete function 
+	function delet(x) {
+		var deleteobject = { filetodelete: curdirect + '/' + x }
+		$.post("http://localhost:3000/crud/delete/", deleteobject, function () {
+			window.location.href = 'http://localhost:3000/';
+		});
+
+	}
+	//..delete function
+
+	//download function
+	function download(x) {
+		window.location.href = 'http://localhost:3000/crud/download' + curdirect + '/' + x;
+	}
+	//download function
+
+	//function to get list of files in current directory
+	function getlist(x = '') {
+
+		if (x.length > 0) { curdirect += '/' + x; }
+
+
+		document.getElementById('showcurdirect').innerHTML = 'home' + curdirect;
+		document.getElementById("uploaddiv").style.visibility = "hidden";
+		document.getElementById("cardsdiv").innerHTML = '';
+		$.get("http://localhost:3000/crud/read" + curdirect, function (data, status) {
+			//load folders
+			var len = data.directory.length;
+			for (i = 0; i < len; i++) {
+				var iDiv = document.createElement('div');
+
+				iDiv.innerHTML = `<div class='card text-center'><div class='card-header'>`
+					+ `<i class="fa fa-folder" style="font-size:24px"></i> ` +
+					`<a href="#" onclick="return getlist('` + data.directory[i] + `');">`
+					+ data.directory[i] + `</a>` +
+					` <button onclick="delet('` + data.directory[i] + `')">Delete</button></div></div>`
+
+				document.getElementById("cardsdiv").appendChild(iDiv);
+			}
+			//load files
+			len = data.fil.length
+			for (i = 0; i < len; i++) {
+				var iDiv = document.createElement('div');
+
+				iDiv.innerHTML = `<div class='card text-center'><div class='card-header'>`
+					+ data.fil[i] + ` <button onclick="delet('` + data.fil[i] + `')">Delete</button>
+			<button onclick="download('` + data.fil[i] + `')">Download</button></div></div>`
+				document.getElementById("cardsdiv").appendChild(iDiv);
+			}
+
+		});
+	}
+
+
+	$(document).ready(function () {
+		getlist();
+		//files tab
+		$("#Fileslist").click(function () {
+			document.getElementById("cardsdiv").innerHTML = "";
+			getlist();
+		});
+		//upload tab
+		$("#UploadBar").click(function () {
+			document.getElementById("cardsdiv").innerHTML = "";
+			document.getElementById("uploaddiv").style.visibility = "visible";
+		});
+		//Newfolder
+		$("#Newfolder").click(function () {
+			document.getElementById("cardsdiv").innerHTML = "";
+			NewObj = document.createElement('div');
+			NewObj.style.visibility = "show";
+			NewObj.innerHTML = `<form id="newfolder" name="newfolder" onclick="return AddCurdirFormNewfolder()" action="http://localhost:3000/crud/newfolder" method="post">
+						<h1>New Foldername:</h1>
+						<input type="text" name="newfoldername" value="">
+						<input type="hidden" id="myField" name="curdirect" value="" />
+						<input  type="submit" />
+					</form>`;
+
+			document.getElementById("cardsdiv").appendChild(NewObj);
+		});
+		//Rename tab
+
+		$("#Rename").click(function () {
+			document.getElementById("uploaddiv").style.visibility = "hidden";
+			document.getElementById("cardsdiv").innerHTML = "";
+			mNewObj = document.createElement('div');
+			mNewObj.id = "BOX";
+			mNewObj.style.visibility = "show";
+			mNewObj.innerHTML = `<form id="rename" name='update' onclick="return AddCurdirFormUpdate()" action="http://localhost:3000/crud/update" method="post">
+						<h1>From:</h1>
+						<input type="text" name="prev" value="">
+						<h1>To:</h1>
+						<input type="text" name="final" value="">
+						<input type="hidden" id="myField" name="curdirect" value="" />
+						<input  type="submit" />
+					</form>`;
+
+			document.getElementById("cardsdiv").appendChild(mNewObj);
+		});
+		//back button
+		$("#Back").click(function () {
+			if (curdirect.length <= 1) { getlist(); }
+			else {
+				//curdirect is changed to parent folder
+				curdirect = curdirect.substring(0, curdirect.lastIndexOf("/"));
+				getlist();
+			}
+
+		});
+
+	});
+
+
+</script>
+
+<body>
+
+
+
+	<section class="sample-text-area">
+		<div class="card text-center">
+			<div class="card-header">
+				<ul class="nav nav-tabs card-header-tabs">
+					<li class="nav-item">
+						<button id="Fileslist" class="nav-link active">Files</button>
+					</li>
+					<li class="nav-item">
+						<button class="nav-link active" id="UploadBar">Upload</button>
+					</li>
+
+					<li class="nav-item">
+						<button class="nav-link active" id="Rename">Rename</button>
+					</li>
+					<li class="nav-item">
+						<button class="nav-link active" id="Newfolder">Newfolder</button>
+					</li>
+					<li class="nav-item">
+						<!--Back Button-->
+						<button class="nav-link active" id="Back">
+							<i class="fa fa-arrow-left" style="font-size:24px"></i>
+						</button>
+
+
+					</li>
+				</ul>
+			</div>
+			<script>
+				//add current directory to post form,this input is hidden
+				function AddCurdirFormUpdate() {
+					document.forms["update"]["curdirect"].value = curdirect;
+					return true;
+				}
+				function AddCurdirUpload() {
+
+					document.forms["fileupload"]["curdirect"].value = curdirect;
+					return true;
+				}
+				function AddCurdirFormNewfolder() {
+					document.forms["newfolder"]["curdirect"].value = curdirect;
+					return true;
+				}
+			</script>
+			<!--Upload File-->
+			<div class="card-body" id="card-body">
+				<div id="uploaddiv">
+					<div class="topnav">
+						<form name="fileupload" onclick="return AddCurdirUpload()" id="fileupload" action="http://localhost:3000/crud/upload" method="post"
+						 enctype="multipart/form-data">
+							<h1>Upload File In Current Directory</h1>
+							<br/>
+							<input type="file" name="upfile" value="">
+							<input type="hidden" id="myField" name="curdirect" value="" />
+							<input type="submit" />
+						</form>
+
+
+					</div>
+				</div>
+				<!--Main Content-->
+				<h5>CurrentDirectory:</h5>
+				<h5 id="showcurdirect"></h5>
+				<br/>
+				<div id="cardsdiv"></div>
+				<!--Main Content-->
+			</div>
+		</div>
+	</section>
+
+</body>
+
+</html>

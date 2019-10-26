@@ -5,12 +5,22 @@ var rimraf = require("rimraf");
 
 //update
 router.post('/update', function (req, res) {
-    const tochange = __dirname + '/files/';
+    const tochange = __dirname + '/files/' + req.body.curdirect + '/';
+    console.log(req.body.curdirect)
+    //check if old file doesn't exist
+    fs.access(tochange + req.body.prev, fs.F_OK, (err) => {
+        if (err) {
+            //if it exists
+            res.status(400).send('file to be renamed does not exist.')
+            return;
+        }
+    });
+
     //check if new file already does not exist
     fs.access(tochange + req.body.final, fs.F_OK, (err) => {
         if (!err) {
             //if it exists
-            res.status(400).send('file already exists.')
+            res.status(400).send('new file already exists.')
             return;
         }
         else {
@@ -27,18 +37,32 @@ router.post('/update', function (req, res) {
 //..update
 
 //read
-router.get('/read', (req, res, next) => {
-    const testFolder = __dirname + '/files/';
+router.get('/read/:subdir(*)', (req, res, next) => {
+    if (req.params.subdir.length > 0) {
+        var testFolder = __dirname + '/files/' + req.params.subdir + '/';
+    }
+    else {
+        var testFolder = __dirname + '/files/';
+    }
+
 
     fs.readdir(testFolder, (err, files) => {
         if (err) { res.status(400).send(err); }
         else {
-            var arr = [];
+            //folder array
+            var frr = [];
+            //directory array
+            var drr = [];
             files.forEach(file => {
-                arr.push(file);
+                if (fs.lstatSync(testFolder + file).isFile()) { frr.push(file); }
+                else { drr.push(file); }
             }
             );
-            res.status(200).send(arr);
+            res.status(200).json({
+
+                fil: frr,
+                directory: drr
+            });
         }
 
     });
@@ -53,11 +77,10 @@ router.post('/upload', function (req, res) {
         return res.status(400).send('No files were uploaded.');
     }
     else {
-
         var file = req.files.upfile,
             name = file.name,
             type = file.mimetype;
-        var uploadpath = __dirname + '/files/' + name;
+        var uploadpath = __dirname + '/files/' + req.body.curdirect + '/' + name;
         file.mv(uploadpath, function (err) {
             if (err) {
                 res.send("Error Occured!")
@@ -73,20 +96,17 @@ router.post('/upload', function (req, res) {
 //..file upload
 
 //new folder
-router.get('/newfolder', function (req, res) {
+router.post('/newfolder', function (req, res) {
 
 
-    var dir = __dirname + '/files/new_folder';
+    var dir = __dirname + '/files/' + req.body.curdirect + '/' + req.body.newfoldername;
+    console.log(req.body.curdirect)
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
-        res.status(200).send('newfolder made');
+        res.redirect('http://localhost:3000');
     }
     else {
-        if (!fs.existsSync(dir + '2')) {
-            fs.mkdirSync(dir + '2');
-            res.status(200).send('newfolder2 made');
-        }
-        else { res.status(200).send('rename newfolder2 first'); }
+        res.send('Folder of this name already exists')
     }
 
 
