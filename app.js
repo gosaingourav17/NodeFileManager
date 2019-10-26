@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 app.use(express.static('public'));
 app.get('/', function (req, res) {
 
-    fs.readFile(__dirname + '/agent.html', function (err, data) {
+    fs.readFile(__dirname + '/explorer.html', function (err, data) {
         if (err) {
             res.writeHead(404);
             res.end(JSON.stringify(err));
